@@ -1,0 +1,83 @@
+import React, { useState } from "react";
+import axios from "axios";
+import { link } from "@/config"; // Assuming you have a config for backend links
+
+const DeleteAccount = () => {
+  const [isChecked, setIsChecked] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleCheckboxChange = (event) => {
+    setIsChecked(event.target.checked);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!isChecked) {
+      setError("Please confirm account deletion.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await axios.post(
+        `${link.backendLink}/api/auth/delete_admin`,
+        { adminId: "76b40fc2-0adb-48c1-acee-db63880e3c83" }
+      );
+      if (response.status === 200) {
+        setSuccess("Account successfully deleted.");
+        window.location.href = "/auth/login";
+      }
+    } catch (error) {
+      setError("Error deleting account.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="card">
+      <div className="card-header" id="delete_account">
+        <h3 className="card-title">Delete Account</h3>
+      </div>
+      <div className="card-body flex flex-col lg:py-7.5 lg:gap-7.5 gap-3">
+        <div className="flex flex-col gap-5">
+          <div className="text-2sm text-gray-800">
+            Deleting your account will permanently remove all your data. This
+            action cannot be undone. Please confirm if you still wish to
+            continue.
+          </div>
+
+          <label className="checkbox-group">
+            <input
+              className="checkbox checkbox-sm"
+              name="delete"
+              type="checkbox"
+              value="1"
+              onChange={handleCheckboxChange}
+            />
+            <span className="checkbox-label">Confirm deleting account</span>
+          </label>
+        </div>
+
+        {error && <div className="text-red-500">{error}</div>}
+        {success && <div className="text-green-500">{success}</div>}
+
+        <div className="flex justify-end gap-2.5">
+          <button
+            className="btn btn-danger"
+            onClick={handleDeleteAccount}
+            disabled={loading}
+          >
+            {loading ? "Deleting..." : "Delete Account"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export { DeleteAccount };
