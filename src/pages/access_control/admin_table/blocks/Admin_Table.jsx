@@ -1,17 +1,13 @@
-/* eslint-disable prettier/prettier */
-import React, { useEffect, useMemo, useState } from "react";
+/* eslint-disable react/prop-types */
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
 import {
   DataGrid,
   DataGridColumnHeader,
   DataGridColumnVisibility,
-  DataGridRowSelect,
-  DataGridRowSelectAll,
   KeenIcon,
   useDataGrid,
 } from "@/components";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 
 const Admin_Table = () => {

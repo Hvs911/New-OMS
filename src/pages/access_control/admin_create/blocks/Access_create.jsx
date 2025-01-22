@@ -86,6 +86,7 @@ const Access_create = () => {
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
                 required
+                placeholder="Email address"
               />
             </div>
           </div>
@@ -101,21 +102,33 @@ const Access_create = () => {
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
                 required
+                placeholder="Username"
               />
             </div>
           </div>
         </div>
         <div className="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
           <label className="form-label max-w-56">Role</label>
-          <div className="grow">
+          <div className="grow block dark:hidden">
             <Select
               options={options}
               isMulti
               value={selectedOptions}
               onChange={handleChange}
-              placeholder="Select"
-              className="basic-multi-select"
-              classNamePrefix="select"
+              placeholder="Select role"
+              className="react-select"
+              classNamePrefix="dropdown"
+            />
+          </div>
+          <div className="grow hidden dark:block">
+            <Select
+              options={options}
+              isMulti
+              value={selectedOptions}
+              onChange={handleChange}
+              placeholder="Select role"
+              className="react-select dark"
+              classNamePrefix="dropdown"
             />
           </div>
         </div>
