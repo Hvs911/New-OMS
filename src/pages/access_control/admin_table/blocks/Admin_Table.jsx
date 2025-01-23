@@ -45,10 +45,14 @@ function Admin_Table() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // const response = await axios.get(
+        //   `${link.backendLink}/api/auth/get_admins`
+        // );
+        // setData(response.data.admins);
         const response = await axios.get(
-          `${link.backendLink}/api/auth/get_admins`
+          "https://6790de96af8442fd737817be.mockapi.io/admin"
         );
-        setData(response.data.admins);
+        setData(response.data);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching admin data:", error);
