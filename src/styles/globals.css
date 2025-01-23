@@ -9,16 +9,12 @@
 /* Shadcn UI */
 @import "shadcn.ui";
 
-/* REACT SELECT */
+/* Light mode styles */
 .dropdown__control {
   border: 1px solid #dbdfe9 !important;
   border-radius: 0.375em !important;
   min-height: 2.5rem !important;
-}
-
-.react-select.dark .dropdown__control {
-  border: 1px solid #363848 !important;
-  background-color: #1f212a !important;
+  background-color: #ffffff;
 }
 
 .dropdown__control .dropdown__value-container .dropdown__placeholder {
@@ -28,41 +24,34 @@
   font-weight: 500;
 }
 
-.react-select.dark
-  .dropdown__control
-  .dropdown__value-container
-  .dropdown__placeholder {
+/* Dark mode styles */
+.dark .react-select .dropdown__control {
+  border: 1px solid #363848 !important;
+  background-color: #1f212a !important;
+}
+
+.dark .react-select .dropdown__control .dropdown__value-container .dropdown__placeholder {
   font-size: 13px;
   color: rgba(255, 255, 255, 0.3);
   font-family: "Inter", sans-serif !important;
   font-weight: 500;
 }
 
-.dropdown__control .dropdown__value-container {
-  padding: 2px 10px;
-}
-
-.dropdown__control .dropdown__indicators .dropdown__indicator-separator {
-  display: none;
-}
-
-.dropdown__menu .dropdown__menu-list .dropdown__option {
-  font-weight: 500;
+.dark .react-select .dropdown__control .dropdown__value-container .dropdown__single-value {
+  color: white !important;
   font-size: 14px;
-  color: black;
+  font-weight: 500;
 }
 
-.react-select.dark .dropdown__menu {
+.dark .react-select .dropdown__menu {
   background-color: #1f212a;
 }
 
-.react-select.dark .dropdown__menu .dropdown__menu-list .dropdown__option {
+.dark .react-select .dropdown__menu .dropdown__menu-list .dropdown__option {
   color: white;
 }
 
-.react-select.dark
-  .dropdown__menu
-  .dropdown__menu-list
-  .dropdown__option--is-focused {
+.dark .react-select .dropdown__menu .dropdown__menu-list .dropdown__option--is-focused {
   background-color: rgba(255, 255, 255, 0.1);
+  color: white;
 }

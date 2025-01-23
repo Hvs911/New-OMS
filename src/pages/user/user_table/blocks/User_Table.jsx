@@ -1,45 +1,54 @@
-/* eslint-disable prettier/prettier */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
 import {
-  DataGrid,
-  DataGridColumnHeader,
-  DataGridColumnVisibility,
-  DataGridRowSelect,
-  DataGridRowSelectAll,
-  KeenIcon,
-  useDataGrid,
-} from "@/components";
-import { toast } from "sonner";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ArrowUpDown,
+  Edit,
+  Trash2,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { link } from "@/config";
 
-const User_Table = () => {
+function User_Table() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [columnVisibility, setColumnVisibility] = useState({
+    name: true,
+    exchange: true,
+    email: true,
+    phone: true,
+  });
+  const itemsPerPage = 10;
 
-  // Fetch user data from the API
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // const token =
-        //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiUHJvZml0Rm9saW8iLCJpYXQiOjE3Mzc0NDkzMjUsImV4cCI6MTczOTE3NzMyNSwiYXVkIjoiNzZiNDBmYzItMGFkYi00OGMxLWFjZWUtZGI2Mzg4MGUzYzgzIiwiaXNzIjoiUHJvZml0Rm9saW8ifQ.An8qrAmHLPDo0aFDh4tlI5wwNFAYcYnSXBN1TuvhQX8";
-        // console.log("Fetching users...", token);
-        // const response = await axios.get(
-        //   "http://localhost:3000/api/user/get_users?adminId=a40e2048-14d9-5264-b328-5dead3197c38",
-        //   {
-        //     headers: {
-        //       Authorization: `Bearer ${token}`,
-        //     },
-        //     withCredentials: true,
-        //   }
-        // );
-        // setData(response.data.users);
-        // setLoading(false);
         const response = await axios.get(
-          "http://6790de96af8442fd737817be.mockapi.io/users"
+          `${link.backendLink}/api/user/get_users?adminId=a40e2048-14d9-5264-b328-5dead3197c38`
         );
-        setData(response.data);
+        setData(response.data.users);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -49,175 +58,224 @@ const User_Table = () => {
     fetchData();
   }, []);
 
-  const ColumnInputFilter = ({ column }) => {
-    return (
-      <Input
-        placeholder="Filter..."
-        value={column.getFilterValue() ?? ""}
-        onChange={(event) => column.setFilterValue(event.target.value)}
-        className="h-9 w-full max-w-40"
-      />
-    );
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
   };
 
-  const columns = useMemo(
-    () => [
-      {
-        accessorKey: "id",
-        header: () => <DataGridRowSelectAll />,
-        cell: ({ row }) => <DataGridRowSelect row={row} />,
-        enableSorting: false,
-        enableHiding: false,
-        meta: {
-          headerClassName: "w-0",
-        },
-      },
-      {
-        accessorKey: "name",
-        header: ({ column }) => (
-          <DataGridColumnHeader
-            title="Name"
-            filter={<ColumnInputFilter column={column} />}
-            column={column}
-          />
-        ),
-        cell: (info) => info.getValue(),
-        meta: {
-          headerClassName: "min-w-[150px]",
-          cellClassName: "text-gray-700 font-normal",
-        },
-      },
-      {
-        accessorKey: "exchange",
-        header: ({ column }) => (
-          <DataGridColumnHeader
-            title="Exchange"
-            filter={<ColumnInputFilter column={column} />}
-            column={column}
-          />
-        ),
-        cell: (info) => info.getValue(),
-        meta: {
-          headerClassName: "min-w-[150px]",
-          cellClassName: "text-gray-700 font-normal",
-        },
-      },
-      {
-        accessorKey: "email",
-        header: ({ column }) => (
-          <DataGridColumnHeader
-            title="Email"
-            filter={<ColumnInputFilter column={column} />}
-            column={column}
-          />
-        ),
-        cell: (info) => info.getValue(),
-        meta: {
-          headerClassName: "min-w-[200px]",
-          cellClassName: "text-gray-700 font-normal",
-        },
-      },
-      {
-        accessorKey: "phone",
-        header: ({ column }) => (
-          <DataGridColumnHeader
-            title="Phone"
-            filter={<ColumnInputFilter column={column} />}
-            column={column}
-          />
-        ),
-        cell: (info) => info.getValue(),
-        meta: {
-          headerClassName: "min-w-[150px]",
-          cellClassName: "text-gray-700 font-normal",
-        },
-      },
-      {
-        id: "edit",
-        header: () => "",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <button
-            className="btn btn-sm btn-icon btn-clear btn-primary"
-            onClick={() => alert(`Clicked on edit for ${row.original.name}`)}
-          >
-            <KeenIcon icon="notepad-edit" />
-          </button>
-        ),
-        meta: {
-          headerClassName: "w-[60px]",
-        },
-      },
-      {
-        id: "delete",
-        header: () => "",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <button
-            className="btn btn-sm btn-icon btn-clear btn-danger"
-            onClick={() => alert(`Clicked on delete for ${row.original.name}`)}
-          >
-            <KeenIcon icon="trash" />
-          </button>
-        ),
-        meta: {
-          headerClassName: "w-[60px]",
-        },
-      },
-    ],
-    []
+  const toggleColumnVisibility = (columnName) => {
+    setColumnVisibility((prev) => ({
+      ...prev,
+      [columnName]: !prev[columnName],
+    }));
+  };
+
+  const getExchangeColor = (exchange) => {
+    switch (exchange) {
+      case "Kotak":
+        return "bg-red-100 text-red-800";
+      case "Jainam":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const filteredAndSortedData = data
+    .filter((user) =>
+      Object.values(user).some((value) =>
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    )
+    .sort((a, b) => {
+      if (!sortColumn) return 0;
+      const valueA = a[sortColumn];
+      const valueB = b[sortColumn];
+      return sortDirection === "asc"
+        ? valueA.localeCompare(valueB)
+        : valueB.localeCompare(valueA);
+    });
+
+  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
+  const paginatedData = filteredAndSortedData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
-  const Toolbar = () => {
-    const { table } = useDataGrid();
-    return (
-      <div className="card-header flex-wrap px-5 py-5 border-b-0">
-        <h3 className="card-title">All Users</h3>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex gap-6">
-            <div className="relative">
-              <KeenIcon
-                icon="magnifier"
-                className="leading-none text-md text-gray-500 absolute top-1/2 start-0 -translate-y-1/2 ms-3"
-              />
-              <input
-                type="text"
-                placeholder="Search Users"
-                className="input input-sm ps-8"
-                value={table.getColumn("name")?.getFilterValue() ?? ""}
-                onChange={(event) =>
-                  table.getColumn("name")?.setFilterValue(event.target.value)
-                }
-              />
-            </div>
-          </div>
-          <DataGridColumnVisibility table={table} />
-        </div>
-      </div>
-    );
-  };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <DataGrid
-      columns={columns}
-      data={data}
-      loading={loading}
-      rowSelection={true}
-      pagination={{
-        size: 10,
-      }}
-      sorting={[
-        {
-          id: "name",
-          desc: false,
-        },
-      ]}
-      toolbar={<Toolbar />}
-      layout={{
-        card: true,
-      }}
-    />
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex justify-between items-center">
+          <span>User Management</span>
+          <div className="flex items-center space-x-4">
+            <Input
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="max-w-sm"
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Eye className="mr-2 h-4 w-4" /> Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.name}
+                  onCheckedChange={() => toggleColumnVisibility("name")}
+                >
+                  Name
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.exchange}
+                  onCheckedChange={() => toggleColumnVisibility("exchange")}
+                >
+                  Exchange
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.email}
+                  onCheckedChange={() => toggleColumnVisibility("email")}
+                >
+                  Email
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.phone}
+                  onCheckedChange={() => toggleColumnVisibility("phone")}
+                >
+                  Phone
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table className="border ">
+          <TableHeader className="border-b rounded-lg">
+            <TableRow>
+              {columnVisibility.name && (
+                <TableHead
+                  className="border-r hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleSort("name")}
+                >
+                  Name
+                  <ArrowUpDown className="inline ml-2 h-4 w-4" />
+                </TableHead>
+              )}
+              {columnVisibility.exchange && (
+                <TableHead
+                  className="border-r hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleSort("exchange")}
+                >
+                  Exchange
+                  <ArrowUpDown className="inline ml-2 h-4 w-4" />
+                </TableHead>
+              )}
+              {columnVisibility.email && (
+                <TableHead
+                  className="border-r hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleSort("email")}
+                >
+                  Email
+                  <ArrowUpDown className="inline ml-2 h-4 w-4" />
+                </TableHead>
+              )}
+              {columnVisibility.phone && (
+                <TableHead
+                  className="border-r hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleSort("phone")}
+                >
+                  Phone
+                  <ArrowUpDown className="inline ml-2 h-4 w-4" />
+                </TableHead>
+              )}
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.map((user) => (
+              <TableRow key={user.id} className="border-b">
+                {columnVisibility.name && (
+                  <TableCell className="border-r">{user.name}</TableCell>
+                )}
+                {columnVisibility.exchange && (
+                  <TableCell className="border-r">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getExchangeColor(user.exchange)}`}
+                    >
+                      {user.exchange}
+                    </span>
+                  </TableCell>
+                )}
+                {columnVisibility.email && (
+                  <TableCell className="border-r">{user.email}</TableCell>
+                )}
+                {columnVisibility.phone && (
+                  <TableCell className="border-r">{user.phone}</TableCell>
+                )}
+                <TableCell>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => alert(`Edit ${user.name}`)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => alert(`Delete ${user.name}`)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-sm text-gray-500">
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" /> Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, currentPage + 1))
+              }
+              disabled={currentPage === totalPages}
+            >
+              Next <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
-};
+}
 
 export { User_Table };

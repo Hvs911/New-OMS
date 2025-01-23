@@ -105,7 +105,7 @@ const AuthTwoFactor = () => {
   };
 
   return (
-    <div className="card">
+    <div className="card shadow-lg rounded-lg">
       <div className="card-header" id="auth_two_factor">
         <h3 className="card-title">Two-Factor Authentication (2FA)</h3>
       </div>

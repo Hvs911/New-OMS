@@ -51,7 +51,7 @@ const AuthEmail = () => {
   };
 
   return (
-    <div className="card pb-2.5">
+    <div className="card pb-2.5 shadow-lg rounded-lg">
       <div className="card-header" id="auth_email">
         <h3 className="card-title">Email</h3>
       </div>

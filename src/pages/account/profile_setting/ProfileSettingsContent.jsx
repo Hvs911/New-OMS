@@ -50,7 +50,7 @@ const ProfileSettingsContent = () => {
       "top-[calc(var(--tw-header-height)+1rem)]"
     : "top-[calc(var(--tw-header-height)+1rem)]";
   return (
-    <div className="flex grow gap-5 lg:gap-7.5">
+    <div className="flex grow gap-5 lg:gap-7.5 ">
       <div className="flex flex-col items-stretch grow gap-5 lg:gap-7.5">
 
         <AuthEmail />

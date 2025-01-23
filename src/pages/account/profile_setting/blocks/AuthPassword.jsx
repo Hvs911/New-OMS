@@ -52,7 +52,7 @@ const AuthPassword = () => {
   };
 
   return (
-    <div className="card">
+    <div className="card shadow-lg rounded-lg">
       <div className="card-header" id="auth_password">
         <h3 className="card-title">Password</h3>
       </div>

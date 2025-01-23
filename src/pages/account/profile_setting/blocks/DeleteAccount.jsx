@@ -39,7 +39,7 @@ const DeleteAccount = () => {
   };
 
   return (
-    <div className="card">
+    <div className="card shadow-lg rounded-lg">
       <div className="card-header" id="delete_account">
         <h3 className="card-title">Delete Account</h3>
       </div>

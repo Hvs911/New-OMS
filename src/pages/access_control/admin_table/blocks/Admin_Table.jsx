@@ -1,32 +1,54 @@
-/* eslint-disable react/prop-types */
-import { useEffect, useMemo, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  DataGrid,
-  DataGridColumnHeader,
-  DataGridColumnVisibility,
-  KeenIcon,
-  useDataGrid,
-} from "@/components";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ArrowUpDown,
+  Edit,
+  Trash2,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { link } from "@/config";
 
-const Admin_Table = () => {
+function Admin_Table() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [columnVisibility, setColumnVisibility] = useState({
+    username: true,
+    email: true,
+    role: true,
+    createdAt: true,
+  });
+  const itemsPerPage = 10;
 
-  // Fetch admin data from the API
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // const response = await axios.get(
-        //   "http://localhost:3000/api/auth/get_admins"
-        // );
-        // setData(response.data.admins); // Assuming the response contains an 'admins' field
-        // setLoading(false);
         const response = await axios.get(
-          "https://6790de96af8442fd737817be.mockapi.io/admin"
+          `${link.backendLink}/api/auth/get_admins`
         );
-        setData(response.data); // Assuming the response contains an 'admins' field
+        setData(response.data.admins);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching admin data:", error);
@@ -36,187 +58,228 @@ const Admin_Table = () => {
     fetchData();
   }, []);
 
-  const ColumnInputFilter = ({ column }) => {
-    return (
-      <Input
-        placeholder="Filter..."
-        value={column.getFilterValue() ?? ""}
-        onChange={(event) => column.setFilterValue(event.target.value)}
-        className="h-9 w-full max-w-40"
-      />
-    );
+  const getRoleColor = (role) => {
+    switch (role) {
+      case "ProfitFolio":
+        return "bg-blue-100 text-blue-800";
+      case "Employee":
+        return "bg-green-100 text-green-800";
+      case "DataEdge":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-red-100 text-red-800";
+    }
   };
 
-  const columns = useMemo(
-    () => [
-      {
-        accessorKey: "username",
-        header: ({ column }) => (
-          <DataGridColumnHeader
-            title="Username"
-            filter={<ColumnInputFilter column={column} />}
-            column={column}
-          />
-        ),
-        cell: (info) => info.getValue(),
-        meta: {
-          headerClassName: "min-w-[150px]",
-          cellClassName: "text-gray-700 font-normal",
-        },
-      },
-      {
-        accessorKey: "email",
-        header: ({ column }) => (
-          <DataGridColumnHeader
-            title="Email"
-            filter={<ColumnInputFilter column={column} />}
-            column={column}
-          />
-        ),
-        cell: (info) => info.getValue(),
-        meta: {
-          headerClassName: "min-w-[200px]",
-          cellClassName: "text-gray-700 font-normal",
-        },
-      },
-      {
-        accessorKey: "role",
-        header: ({ column }) => (
-          <DataGridColumnHeader
-            title="Role"
-            filter={<ColumnInputFilter column={column} />}
-            column={column}
-          />
-        ),
-        cell: (info) => {
-          let color;
-          if (info.row.original.role === "ProfitFolio") {
-            color = "primary";
-          } else if (info.row.original.role === "Employee") {
-            color = "success";
-          } else if (info.row.original.role === "DataEdge") {
-            color = "warning";
-          } else {
-            color = "danger";
-          }
-          return (
-            <span
-              className={`badge badge-${color} shrink-0 badge-outline rounded-[30px]`}
-            >
-              {info.row.original.role}
-            </span>
-          );
-        },
-        meta: {
-          headerClassName: "min-w-[150px]",
-          cellClassName: "text-gray-700 font-normal",
-        },
-      },
-      {
-        accessorKey: "createdAt",
-        header: ({ column }) => (
-          <DataGridColumnHeader
-            title="Created At"
-            filter={<ColumnInputFilter column={column} />}
-            column={column}
-          />
-        ),
-        cell: (info) => new Date(info.getValue()).toLocaleString(),
-        meta: {
-          headerClassName: "min-w-[200px]",
-          cellClassName: "text-gray-700 font-normal",
-        },
-      },
-      {
-        id: "edit",
-        header: () => "",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <button
-            className="btn btn-sm btn-icon btn-clear btn-primary"
-            onClick={() => alert(`Clicked on edit for ${row.original.adminId}`)}
-          >
-            <KeenIcon icon="notepad-edit" />
-          </button>
-        ),
-        meta: {
-          headerClassName: "w-[60px]",
-        },
-      },
-      {
-        id: "delete",
-        header: () => "",
-        enableSorting: false,
-        cell: ({ row }) => (
-          <button
-            className="btn btn-sm btn-icon btn-clear btn-danger"
-            onClick={() =>
-              alert(`Clicked on delete for ${row.original.adminId}`)
-            }
-          >
-            <KeenIcon icon="trash" />
-          </button>
-        ),
-        meta: {
-          headerClassName: "w-[60px]",
-        },
-      },
-    ],
-    []
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const toggleColumnVisibility = (columnName) => {
+    setColumnVisibility((prev) => ({
+      ...prev,
+      [columnName]: !prev[columnName],
+    }));
+  };
+
+  const filteredAndSortedData = data
+    .filter((admin) =>
+      Object.values(admin).some((value) =>
+        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    )
+    .sort((a, b) => {
+      if (!sortColumn) return 0;
+      const valueA = a[sortColumn];
+      const valueB = b[sortColumn];
+      return sortDirection === "asc"
+        ? valueA.localeCompare(valueB)
+        : valueB.localeCompare(valueA);
+    });
+
+  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
+  const paginatedData = filteredAndSortedData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
-  const Toolbar = () => {
-    const { table } = useDataGrid();
-    return (
-      <div className="card-header flex-wrap px-5 py-5 border-b-0">
-        <h3 className="card-title">All Admins</h3>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex gap-6">
-            <div className="relative">
-              <KeenIcon
-                icon="magnifier"
-                className="leading-none text-md text-gray-500 absolute top-1/2 start-0 -translate-y-1/2 ms-3"
-              />
-              <input
-                type="text"
-                placeholder="Search Admins"
-                className="input input-sm ps-8"
-                value={table.getColumn("username")?.getFilterValue() ?? ""}
-                onChange={(event) =>
-                  table
-                    .getColumn("username")
-                    ?.setFilterValue(event.target.value)
-                }
-              />
-            </div>
-          </div>
-          <DataGridColumnVisibility table={table} />
-        </div>
-      </div>
-    );
-  };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <DataGrid
-      columns={columns}
-      data={data}
-      loading={loading}
-      rowSelection={true}
-      pagination={{
-        size: 10,
-      }}
-      sorting={[
-        {
-          id: "username",
-          desc: false,
-        },
-      ]}
-      toolbar={<Toolbar />}
-      layout={{
-        card: true,
-      }}
-    />
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex justify-between items-center">
+          <span>Admin Management</span>
+          <div className="flex items-center space-x-4">
+            <Input
+              placeholder="Search admins..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="max-w-sm"
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Eye className="mr-2 h-4 w-4" /> Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.username}
+                  onCheckedChange={() => toggleColumnVisibility("username")}
+                >
+                  Username
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.email}
+                  onCheckedChange={() => toggleColumnVisibility("email")}
+                >
+                  Email
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.role}
+                  onCheckedChange={() => toggleColumnVisibility("role")}
+                >
+                  Role
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.createdAt}
+                  onCheckedChange={() => toggleColumnVisibility("createdAt")}
+                >
+                  Created At
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Table className="border">
+          <TableHeader className="border-b">
+            <TableRow>
+              {columnVisibility.username && (
+                <TableHead
+                  className="border-r hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleSort("username")}
+                >
+                  Username
+                  <ArrowUpDown className="inline ml-2 h-4 w-4" />
+                </TableHead>
+              )}
+              {columnVisibility.email && (
+                <TableHead
+                  className="border-r hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleSort("email")}
+                >
+                  Email
+                  <ArrowUpDown className="inline ml-2 h-4 w-4" />
+                </TableHead>
+              )}
+              {columnVisibility.role && (
+                <TableHead
+                  className="border-r hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleSort("role")}
+                >
+                  Role
+                  <ArrowUpDown className="inline ml-2 h-4 w-4" />
+                </TableHead>
+              )}
+              {columnVisibility.createdAt && (
+                <TableHead
+                  className="border-r hover:bg-gray-100 cursor-pointer"
+                  onClick={() => handleSort("createdAt")}
+                >
+                  Created At
+                  <ArrowUpDown className="inline ml-2 h-4 w-4" />
+                </TableHead>
+              )}
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.map((admin) => (
+              <TableRow key={admin.adminId} className="border-b">
+                {columnVisibility.username && (
+                  <TableCell className="border-r">{admin.username}</TableCell>
+                )}
+                {columnVisibility.email && (
+                  <TableCell className="border-r">{admin.email}</TableCell>
+                )}
+                {columnVisibility.role && (
+                  <TableCell className="border-r">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(admin.role)}`}
+                    >
+                      {admin.role}
+                    </span>
+                  </TableCell>
+                )}
+                {columnVisibility.createdAt && (
+                  <TableCell className="border-r">
+                    {new Date(admin.createdAt).toLocaleString()}
+                  </TableCell>
+                )}
+                <TableCell>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => alert(`Edit ${admin.adminId}`)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => alert(`Delete ${admin.adminId}`)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        <div className="flex justify-between items-center mt-4">
+          <div className="text-sm text-gray-500">
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4 mr-2" /> Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, currentPage + 1))
+              }
+              disabled={currentPage === totalPages}
+            >
+              Next <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
-};
+}
 
 export { Admin_Table };

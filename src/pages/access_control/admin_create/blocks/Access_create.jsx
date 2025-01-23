@@ -1,74 +1,111 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { link } from "@/config";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import Select from "react-select";
-const initialData = {
-  email: "",
-  username: "",
-};
+import { link } from "@/config";
+import { KeenIcon } from "@/components";
 
 const Access_create = () => {
-  const [emailInput, setEmailInput] = useState(initialData.email);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [userName, setUserName] = useState(initialData.username);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
 
-  const options = [
+  const roleOptions = [
     { value: "ProfitFolio", label: "ProfitFolio" },
     { value: "DataEdge", label: "DataEdge" },
     { value: "Employee", label: "Employee" },
     { value: "Viewer", label: "Viewer" },
   ];
 
-  const [selectedOptions, setSelectedOptions] = useState([]);
-
-  const handleChange = (selected) => {
-    setSelectedOptions(selected || []);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess(false);
-    if (initialData.email === emailInput && initialData.username === userName) {
-      setLoading(false);
-      setError("No changes detected");
-      return;
-    }
-    try {
-      const response = await axios.put(
-        `${link.backendLink}/api/auth/update_admin`,
-        {
-          adminId: "76b40fc2-0adb-48c1-acee-db63880e3c83",
-          email: emailInput,
-          username: userName,
-        }
-      );
-
-      if (response.status === 200) {
-        setSuccess(true);
-        setTimeout(() => {
-          setSuccess(false);
-        }, 2000);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get(
+          `${link.backendLink}/api/user/getall_users?adminId=a40e2048-14d9-5264-b328-5dead3197c38`
+        );
+        const userOptions = response.data.users.map((user) => ({
+          value: user.userId,
+          label: user.name,
+        }));
+        setUsers(userOptions);
+      } catch (err) {
+        setError(
+          err.response?.data?.message ||
+            "An error occurred while fetching users"
+        );
       }
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "An error occurred while updating your profile"
-      );
-    } finally {
+    };
+    fetchUsers();
+  }, []);
+
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      username: "",
+      password: "",
+      role: null,
+      user: [],
+    },
+    validationSchema: Yup.object({
+      email: Yup.string().email("Invalid email address").required("Required"),
+      username: Yup.string().required("Username is Required"),
+      password: Yup.string().required("Password is required"),
+      role: Yup.object().required("Role is required"),
+    }),
+    onSubmit: async (values) => {
+      setLoading(true);
+      setError("");
+      setSuccess(false);
+      try {
+        const payload = {
+          username: values.username,
+          email: values.email,
+          password: values.password,
+          role: values.role.value,
+          users:
+            values.role.value === "ProfitFolio" ||
+            values.role.value === "DataEdge"
+              ? []
+              : values.user.map((user) => ({ userId: user.value })),
+        };
+
+        const response = await axios.post(
+          `${link.backendLink}/api/auth/register`,
+          payload
+        );
+
+        if (response.status === 200) {
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 2000);
+          formik.resetForm();
+        } else {
+          setError("An error occurred while creating admin");
+        }
+      } catch (err) {
+        console.log(err);
+        setError(
+          err.response?.data?.message ||
+            "An error occurred while creating admin"
+        );
+      }
       setLoading(false);
-    }
-  };
+    },
+  });
+
+  const selectedRole = formik.values.role?.value;
 
   return (
     <div className="card pb-2.5">
       <div className="card-header" id="auth_email">
         <h3 className="card-title">Add Admin</h3>
       </div>
-      <form onSubmit={handleSubmit} className="card-body grid gap-5 pt-7.5">
+      <form
+        onSubmit={formik.handleSubmit}
+        className="card-body grid gap-5 pt-7.5"
+      >
         {error && <div className="text-red-500 text-sm">{error}</div>}
         {success && (
           <div className="text-green-500 text-sm">
@@ -79,15 +116,19 @@ const Access_create = () => {
         <div className="w-full">
           <div className="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
             <label className="form-label max-w-56">Email</label>
-            <div className="flex flex-col items-start grow gap-7.5 w-full">
+            <div className="flex flex-col items-start grow">
               <input
                 className="input"
                 type="email"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                required
+                autoComplete="off"
+                {...formik.getFieldProps("email")}
                 placeholder="Email address"
               />
+              {formik.touched.email && formik.errors.email ? (
+                <div className="text-red-500 text-sm">
+                  {formik.errors.email}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -95,46 +136,93 @@ const Access_create = () => {
         <div className="w-full">
           <div className="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
             <label className="form-label max-w-56">Username</label>
-            <div className="flex flex-col items-start grow gap-7.5 w-full">
+            <div className="flex flex-col items-start grow ">
               <input
                 className="input"
                 type="text"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                required
+                autoComplete="off"
+                {...formik.getFieldProps("username")}
                 placeholder="Username"
               />
+              {formik.touched.username && formik.errors.username ? (
+                <div className="text-red-500 text-sm">
+                  {formik.errors.username}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
-        <div className="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
-          <label className="form-label max-w-56">Role</label>
-          <div className="grow block dark:hidden">
-            <Select
-              options={options}
-              isMulti
-              value={selectedOptions}
-              onChange={handleChange}
-              placeholder="Select role"
-              className="react-select"
-              classNamePrefix="dropdown"
-            />
-          </div>
-          <div className="grow hidden dark:block">
-            <Select
-              options={options}
-              isMulti
-              value={selectedOptions}
-              onChange={handleChange}
-              placeholder="Select role"
-              className="react-select dark"
-              classNamePrefix="dropdown"
-            />
+
+        <div className="w-full">
+          <div className="flex items-center gap-2.5">
+            <label className="form-label max-w-56">Password</label>
+            <div className="relative w-full">
+              <div>
+                <input
+                  className="input w-full pr-10"
+                  type={showCurrent ? "text" : "password"}
+                  autoComplete="off"
+                  {...formik.getFieldProps("password")}
+                  placeholder="Enter password"
+                />
+                <KeenIcon
+                  icon={showCurrent ? "eye-slash" : "eye"}
+                  onClick={() => setShowCurrent(!showCurrent)}
+                  className="absolute right-2 top-4.5 transform -translate-y-1/2 cursor-pointer"
+                />
+              </div>
+
+              {formik.touched.password && formik.errors.password ? (
+                <div className="text-red-500 text-sm">
+                  {formik.errors.password}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
+
+        <div className="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+          <label className="form-label max-w-56">Role</label>
+          <div className="grow">
+            <div className="block ">
+              <Select
+                options={roleOptions}
+                value={formik.values.role}
+                onChange={(value) => formik.setFieldValue("role", value)}
+                placeholder="Select role"
+                className="react-select"
+                classNamePrefix="dropdown"
+              />
+            </div>
+            {formik.touched.role && formik.errors.role ? (
+              <div className="text-red-500 text-sm">{formik.errors.role}</div>
+            ) : null}
+          </div>
+        </div>
+
+        {selectedRole !== "ProfitFolio" && selectedRole !== "DataEdge" && (
+          <div className="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+            <label className="form-label max-w-56">User</label>
+            <div className="grow">
+              <Select
+                options={users}
+                isMulti
+                value={formik.values.user}
+                onChange={(value) => formik.setFieldValue("user", value)}
+                placeholder="Select user"
+                className="react-select"
+                classNamePrefix="dropdown"
+              />
+              {formik.touched.user && formik.errors.user ? (
+                <div className="text-red-500 text-sm">{formik.errors.user}</div>
+              ) : null}
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-end">
           <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
+            {loading ? "Saving..." : "Add Admin"}
           </button>
         </div>
       </form>
